@@ -90,7 +90,9 @@ key =
 admin =
 appid =
 appkey =
-template =
+template_admin =
+template_sms =
+sign =
 ```
 
 `core`节点：
@@ -121,7 +123,11 @@ PS：此配置为腾讯云短信接口配置，用于在聊天室中输入指令
 
 `appkey`：应用key秘钥
 
-`template`：短信模板ID
+`template_admin`：短信通知管理员模板ID
+
+`template_sms`：短信通知用户模板ID
+
+`sign`：短信签名，不填则使用默认签名
 
 ## 聊天指令
 
