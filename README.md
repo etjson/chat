@@ -41,18 +41,22 @@
 启动后的提示如下：
 
 ```text
-[root@centos phptest]# ./run start
-#!/usr/bin/env php
-╔══════════════════════════════════════════════════╗
-  chat.server
-  url: https://github.com/etjson/chat/releases
-  version: 1.0
-╚══════════════════════════════════════════════════╝
-[root@centos phptest]# [INFO] Worker#0 started.
-[INFO] WebSocket Server listening at 0.0.0.0:33451
-[INFO] HTTP Server listening at 0.0.0.0:9090
-[INFO] Process[redis.0] start.
+ _____   _   _       ___   _____
+/  ___| | | | |     /   | |_   _|
+| |     | |_| |    / /| |   | |
+| |     |  _  |   / / | |   | |
+| |___  | | | |  / /  | |   | |
+\_____| |_| |_| /_/   |_|   |_|
+--------------------------------------------------
+chat.server
+url: https://github.com/etjson/chat
+version: 1.1
+--------------------------------------------------
+[root@centos chat]# [INFO] Process[redis.0] start.
 [INFO] Process[jsencode.0] start.
+[INFO] Worker#0 started.
+[INFO] WebSocket Server listening at 127.0.0.1:35585
+[INFO] HTTP Server listening at 0.0.0.0:9090
 ```
 
 访问地址为：
@@ -73,18 +77,10 @@ port = 9090
 redis = 6389
 key =
 adminpwd =
-
-[bt]
-url =
-key =
-
-[sms]
-admin =
-appid =
-appkey =
-template_admin =
-template_sms =
-sign =
+aiurl =
+apilist =
+rw_pc =
+rw_mobile =
 ```
 
 `core`节点：
@@ -97,76 +93,93 @@ sign =
 
 `adminpwd`：管理员密码，输入成为管理员指令需要用到
 
-`bt`节点：
+`apiurl`：机器人交互回调接口
 
-PS：此配置为宝塔API接口配置，用于在聊天室中输入指令调用宝塔服务，配置时IP白名单别忘填写127.0.0.1(特殊情况除外)
+`apilist`：自定义扩展
 
-`url`：宝塔API地址
+`rw_pc`：电脑端伪静态规则
 
-`key`：宝塔API的秘钥
-
-`sms`节点：
-
-PS：此配置为腾讯云短信接口配置，用于在聊天室中输入指令调用短信发送服务
-
-`admin`：管理员手机号
-
-`appid`：应用appid
-
-`appkey`：应用key秘钥
-
-`template_admin`：短信通知管理员模板ID
-
-管理员通知模板只会传递房间ID一个参数，所以推荐申请这个模板：
-
+留空默认如下：
 ```text
-亲爱的管理员，房间：{1}号呼叫，请及时查看！
+/i/[fid].html
 ```
 
-`template_sms`：短信通知用户模板ID
+`rw_mobile`：手机端伪静态规则
 
-短信通知用户模板没有参数要求，但是用户提供的参数值必须和模板中的对应，比如申请的模板是：
-
+留空默认如下：
 ```text
-亲爱的用户：{1}，您好，房间：{2}号呼叫，请及时查看！
+/ii/[fid].html
 ```
 
-这个模板中就包含了两个参数，此时管理员指令`#dingto`应该发送如下格式：
+## 自定义扩展
+
+需配置`apilist`，并且对应配置。
+
+以下为配置例子：
 
 ```text
-#dingto 13800000000 用户A 房间B
+apilist = 1,2
+
+[api_1]
+url = http://xxxxx.com/api.php
+title = 测试1
+admin =
+input =
+tip =
+
+[api_2]
+url = http://xxxxx.com/api.php
+title = 测试2
+admin = 1
+input = 1
+tip = 这里是输入框提示
 ```
 
-`sign`：短信签名，不填则使用默认签名
+`apilist`：填写的是id数组，以逗号分隔，填写1，那么就要对应有`[api_1]`的配置。
+
+`url`：填写回调地址，例如用户点击的是测试1，那么接口接收的`POST`内容如下：
+
+data为用户在输入框输入的内容，测试1没有开启输入框所以为空
+
+```text
+{
+    "id": "1",
+    "data": "",
+    "fid": "123",
+    "uid": "10001"
+}
+```
+
+`admin`：不为空则必须管理员才可操作
+
+`input`：不为空则是需要输入框输入内容
+
+`tip`：不为空则是输入框的提示内容，换行用`&#10;`符号
+
+
+## 其它配置
+
+在根目录下创建`index.tpl`文件可以自定义首页内容。
+
+在根目录下创建`welcome.txt`可自定义机器人欢迎语句。
 
 ## 聊天指令
 
-`#setadmin 密码`：成为管理员
+需配置`apiurl`回调接口，指令发送的内容会通过`post`方式请求回调接口。
 
-`#deladmin 密码`：取消管理员
+以下为用户发送的指令以及回调接口接收的内容：
 
-`#delmsgall`：清空当前房间所有成员聊天记录(需管理员权限)
+```text
+#ai 第一个参数 第二个参数
+```
 
-`#dingto 手机号码 内容`：发送手机端短信给指定手机号(需管理员权限)(需配置短信接口)
-
-`#stopip IP地址`：封禁IP地址，用户无法进入任何房间(需管理员权限)
-
-`#stopipre IP地址`：解封IP地址(需管理员权限)
-
-`#getdata`：查看所有房间基本信息(需管理员权限)
-
-`#getuid 用户UID`：查看某个用户的基本信息(需管理员权限)
-
-`#wall`：查看防火墙信息(需管理员权限)(需配置宝塔接口)
-
-`#ruin 端口号`：操作端口封禁(需管理员权限)(需配置宝塔接口)
-
-`#ruinre 端口号`：操作端口解封开放(需管理员权限)(需配置宝塔接口)
-
-`#private 用户UID 内容`：给别人发送私聊，不支持回复
-
-`#my`：查看自己用户信息
-
-`#ding`：通知管理员来当前房间(需配置短信接口)
-
-`#ai 内容`：和AI机器人进行交互(需要连接外网)
+```text
+{
+    "data": [
+        "第一个参数",
+        "第二个参数"
+    ],
+    "fid": "123",
+    "uid": "10001"
+}
+```
