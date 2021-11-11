@@ -101,14 +101,14 @@ rw_mobile =
 
 留空默认如下：
 ```text
-/i/[fid].html
+/i/[id].html
 ```
 
 `rw_mobile`：手机端伪静态规则
 
 留空默认如下：
 ```text
-/ii/[fid].html
+/ii/[id].html
 ```
 
 ## 自定义扩展
